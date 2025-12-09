@@ -1,0 +1,51 @@
+services:
+  app:
+    build: .
+    container_name: app
+    working_dir: /var/www/html
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/var/www/html
+    command: >
+      bash -c "
+        apt-get update &&
+        apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev &&
+        docker-php-ext-configure gd --with-freetype --with-jpeg &&
+        docker-php-ext-install gd pdo pdo_mysql &&
+        apache2-foreground
+      "
+
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: meu_pet_sumiu
+      MYSQL_USER: meu_pet_sumiu
+      MYSQL_PASSWORD: meu_pet_sumiu123
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./dba.sql:/docker-entrypoint-initdb.d/dba.sql
+      - dbdata:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8080:80"
+
+volumes:
+  dbdata:
